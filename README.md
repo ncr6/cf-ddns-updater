@@ -5,7 +5,7 @@ Yet another Cloudflare dynamic DNS record update tool
 ![Go](https://github.com/imgrant/cf-ddns-updater/workflows/Go/badge.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/imgrant/cf-ddns-updater)](https://goreportcard.com/report/github.com/imgrant/cf-ddns-updater)
 
-This is a simple Go utility for updating a DNS record via the [Cloudflare v4 API](https://api.cloudflare.com/). It’s designed for dynamic DNS use cases, and so resolves the current external IP address using the [ipify API](https://www.ipify.org/) for determining public IP addresses, and then points a DNS A record at it. You may or may not find it useful.
+This is a simple Go utility for updating DNS records via the [Cloudflare v4 API](https://api.cloudflare.com/). It’s designed for dynamic DNS use cases, and so resolves the current external IP address using the [ipify API](https://www.ipify.org/) for determining public IP addresses, and then points DNS A records at it. You may or may not find it useful.
 
 ## :zap: Quick start
 
@@ -42,7 +42,7 @@ Create a [JSON configuration file](config.example.json)  with the hostname to up
 
 ```json
 {
-  "FQDN": "myip.example.com",
+  "FQDN": ["myip.example.com", "myip2.example.com", "myip3.example.com"],
   "APIToken": "<Your Cloudflare API token>"
 }
 ```

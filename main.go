@@ -15,52 +15,67 @@ import (
 )
 
 type Config struct {
-	FQDN     string
+	FQDN     []string
 	APIToken string
 }
 
 var config Config
 var appName = "cf-ddns-updater"
+var updateErrors = 0
 
-func updateDNSRecord(fqdn string, recordType string, ip string, checkMode bool) error {
+func updateDNSRecord(fqdnArr []string, recordType string, ip string, checkMode bool) error {
 	api, err := cloudflare.NewWithAPIToken(config.APIToken)
 	if err != nil {
-		return err
+		updateErrors++
 	}
 
-	domain := domainutil.Domain(fqdn)
-	zoneID, err := api.ZoneIDByName(domain)
-	if err != nil {
-		return err
-	}
+	for _, fqdn := range fqdnArr {
+		log.Println("Processing FQDN:", fqdn)
 
-	fqdnRecord := cloudflare.DNSRecord{Name: fqdn}
-	records, err := api.DNSRecords(context.Background(), zoneID, fqdnRecord)
-	if err != nil {
-		return err
-	}
-
-	for _, r := range records {
-		if r.Content == ip {
-			log.Printf("%s points to current IP address, no change is needed.", r.Name)
-			continue
+		domain := domainutil.Domain(fqdn)
+		zoneID, err := api.ZoneIDByName(domain)
+		if err != nil {
+			log.Println(err)
+			updateErrors++
 		}
-		log.Printf("%s points to %s, the record will be updated.", r.Name, r.Content)
 
-		if checkMode {
-			log.Println("Check mode is active, no changes will be made.")
-		} else {
-			log.Println("Setting", fqdn, "=>", ip, "...")
-			r.Content = ip
-			err := api.UpdateDNSRecord(context.Background(), zoneID, r.ID, r)
-			if err != nil {
-				return err
+		fqdnRecord := cloudflare.DNSRecord{Name: fqdn}
+		records, err := api.DNSRecords(context.Background(), zoneID, fqdnRecord)
+		if err != nil {
+			log.Println(err)
+			updateErrors++
+		}
+
+		for _, r := range records {
+			if r.Content == ip {
+				log.Printf("%s points to current IP address, no change is needed.", r.Name)
+				continue
 			}
-			log.Println("Success!")
-		}
+			log.Printf("%s points to %s, the record will be updated.", r.Name, r.Content)
 
+			if checkMode {
+				log.Println("Check mode is active, no changes will be made.")
+			} else {
+				log.Println("Setting", fqdn, "=>", ip, "...")
+				r.Content = ip
+				err := api.UpdateDNSRecord(context.Background(), zoneID, r.ID, r)
+				if err != nil {
+					log.Println(err)
+					updateErrors++
+				}
+				log.Println("Success!")
+			}
+
+		}
 	}
-	return nil
+
+	log.Println(updateErrors, "errors occurred.")
+
+	if updateErrors > 0 {
+		return cloudflare.Error{}
+	} else {
+		return nil
+	}
 }
 
 func loadConfig(fn string) error {
@@ -91,6 +106,6 @@ func main() {
 
 	err = updateDNSRecord(config.FQDN, "A", ipv4, *check_mode)
 	if err != nil {
-		log.Println(err)
+		log.Println("Unable to update all DNS records.")
 	}
 }

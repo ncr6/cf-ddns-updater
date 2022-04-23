@@ -1,4 +1,4 @@
 {
-  "FQDN": "myip.example.com",
+  "FQDN": ["myip.example.com", "myip2.example.com", "myip3.example.com"],
   "APIToken": "<Your Cloudflare API token>"
 }
