@@ -47,25 +47,26 @@ func updateDNSRecord(fqdnArr []string, recordType string, ip string, checkMode b
 		}
 
 		for _, r := range records {
-			if r.Content == ip {
-				log.Printf("%s points to current IP address, no change is needed.", r.Name)
-				continue
-			}
-			log.Printf("%s points to %s, the record will be updated.", r.Name, r.Content)
-
-			if checkMode {
-				log.Println("Check mode is active, no changes will be made.")
-			} else {
-				log.Println("Setting", fqdn, "=>", ip, "...")
-				r.Content = ip
-				err := api.UpdateDNSRecord(context.Background(), zoneID, r.ID, r)
-				if err != nil {
-					log.Println(err)
-					updateErrors++
+			if r.Type == recordType {
+				if r.Content == ip {
+					log.Printf("%s points to current IP address, no change is needed.", r.Name)
+					continue
 				}
-				log.Println("Success!")
-			}
+				log.Printf("%s points to %s, the record will be updated.", r.Name, r.Content)
 
+				if checkMode {
+					log.Println("Check mode is active, no changes will be made.")
+				} else {
+					log.Println("Setting", fqdn, "=>", ip, "...")
+					r.Content = ip
+					err := api.UpdateDNSRecord(context.Background(), zoneID, r.ID, r)
+					if err != nil {
+						log.Println(err)
+						updateErrors++
+					}
+					log.Println("Success!")
+				}
+			}
 		}
 	}
 
