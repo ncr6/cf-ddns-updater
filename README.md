@@ -1,3 +1,5 @@
+Note: No longer maintained as DDNS is now managed by my OpenWrt router
+
 # cf-ddns-updater
 
 Yet another Cloudflare dynamic DNS record update tool
